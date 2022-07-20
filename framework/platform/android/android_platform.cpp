@@ -297,7 +297,7 @@ inline TouchAction translate_touch_action(int action)
 
 void on_content_rect_changed(ANativeActivity *activity, const ARect *rect)
 {
-	LOGI("ContentRectChanged: {:p}\n", static_cast<void *>(activity));
+	LOGI("ContentRectChanged:({},{}),({},{}) {:p}\n", rect->left, rect->top, rect->right, rect->bottom, static_cast<void *>(activity));
 	struct android_app *app = reinterpret_cast<struct android_app *>(activity->instance);
 	auto                cmd = APP_CMD_CONTENT_RECT_CHANGED;
 
