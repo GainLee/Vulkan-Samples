@@ -186,27 +186,27 @@ Instance::Instance(const std::string &                           application_nam
 	VK_CHECK(vkEnumerateInstanceExtensionProperties(nullptr, &instance_extension_count, available_instance_extensions.data()));
 
 #if defined(VKB_DEBUG) || defined(VKB_VALIDATION_LAYERS)
-	#if defined(ANDROID)
-		//Force add VK_EXT_DEBUG_UTILS_EXTENSION_NAME, case we use a so library that include VK_EXT_DEBUG_UTILS_EXTENSION_NAME
-		enabled_extensions.emplace_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
-		const bool has_debug_utils = true;
-	#else
-		// Check if VK_EXT_debug_utils is supported, which supersedes VK_EXT_Debug_Report
-		const bool has_debug_utils  = enable_extension(VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
-													  available_instance_extensions, enabled_extensions);
-		bool       has_debug_report = false;
+#	if defined(ANDROID)
+	//Force add VK_EXT_DEBUG_UTILS_EXTENSION_NAME, case we use a so library that include VK_EXT_DEBUG_UTILS_EXTENSION_NAME
+	enabled_extensions.emplace_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+	const bool has_debug_utils = true;
+#	else
+	// Check if VK_EXT_debug_utils is supported, which supersedes VK_EXT_Debug_Report
+	const bool has_debug_utils  = enable_extension(VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
+                                                  available_instance_extensions, enabled_extensions);
+	bool       has_debug_report = false;
 
-		if (!has_debug_utils)
+	if (!has_debug_utils)
+	{
+		has_debug_report = enable_extension(VK_EXT_DEBUG_REPORT_EXTENSION_NAME,
+		                                    available_instance_extensions, enabled_extensions);
+		if (!has_debug_report)
 		{
-			has_debug_report = enable_extension(VK_EXT_DEBUG_REPORT_EXTENSION_NAME,
-												available_instance_extensions, enabled_extensions);
-			if (!has_debug_report)
-			{
-				LOGW("Neither of {} or {} are available; disabling debug reporting",
-					 VK_EXT_DEBUG_UTILS_EXTENSION_NAME, VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
-			}
+			LOGW("Neither of {} or {} are available; disabling debug reporting",
+			     VK_EXT_DEBUG_UTILS_EXTENSION_NAME, VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
 		}
-	#endif
+	}
+#	endif
 #endif
 
 #if (defined(VKB_DEBUG) || defined(VKB_VALIDATION_LAYERS)) && defined(VKB_VALIDATION_LAYERS_GPU_ASSISTED)
@@ -305,7 +305,8 @@ Instance::Instance(const std::string &                           application_nam
 #if defined(ANDROID)
 	//Force add VK_LAYER_KHRONOS_validation, case we use a so library that include VK_EXT_DEBUG_UTILS_EXTENSION_NAME
 	if (std::find(requested_validation_layers.begin(), requested_validation_layers.end(),
-				  "VK_LAYER_KHRONOS_validation") == requested_validation_layers.end()) {
+	              "VK_LAYER_KHRONOS_validation") == requested_validation_layers.end())
+	{
 		requested_validation_layers.emplace_back("VK_LAYER_KHRONOS_validation");
 	}
 #endif
