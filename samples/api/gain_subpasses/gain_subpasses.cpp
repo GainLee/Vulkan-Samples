@@ -99,7 +99,7 @@ void Gain_Subpasses::build_command_buffers()
 
 		vkCmdDraw(draw_cmd_buffers[i], 6, 1, 0, 0);
 
-		draw_ui(draw_cmd_buffers[i]);
+//		draw_ui(draw_cmd_buffers[i]);
 
 		vkCmdEndRenderPass(draw_cmd_buffers[i]);
 
@@ -135,8 +135,8 @@ void Gain_Subpasses::prepare_pipelines()
 	VkPipelineRasterizationStateCreateInfo rasterization_state =
 			vkb::initializers::pipeline_rasterization_state_create_info(
 					VK_POLYGON_MODE_FILL,
-					VK_CULL_MODE_NONE,
-					VK_FRONT_FACE_COUNTER_CLOCKWISE,
+					VK_CULL_MODE_BACK_BIT,
+					VK_FRONT_FACE_CLOCKWISE,
 					0);
 
 	VkPipelineColorBlendAttachmentState blend_attachment_state =
@@ -152,9 +152,9 @@ void Gain_Subpasses::prepare_pipelines()
 	// Note: Using Reversed depth-buffer for increased precision, so Greater depth values are kept
 	VkPipelineDepthStencilStateCreateInfo depth_stencil_state =
 			vkb::initializers::pipeline_depth_stencil_state_create_info(
-					VK_TRUE,
-					VK_TRUE,
-					VK_COMPARE_OP_GREATER);
+					VK_FALSE,
+					VK_FALSE,
+					VK_COMPARE_OP_LESS_OR_EQUAL);
 	depth_stencil_state.stencilTestEnable = VK_TRUE;
 	depth_stencil_state.back.failOp = VK_STENCIL_OP_REPLACE;
 	depth_stencil_state.back.depthFailOp = VK_STENCIL_OP_REPLACE;
@@ -162,7 +162,7 @@ void Gain_Subpasses::prepare_pipelines()
 	depth_stencil_state.back.compareOp = VK_COMPARE_OP_ALWAYS;
 	depth_stencil_state.back.compareMask = 0xff;
 	depth_stencil_state.back.writeMask = 0xff;
-	depth_stencil_state.back.reference = 1;
+	depth_stencil_state.back.reference = 0x44;
 	depth_stencil_state.front = depth_stencil_state.back;
 
 	VkPipelineViewportStateCreateInfo viewport_state =
@@ -216,6 +216,12 @@ void Gain_Subpasses::prepare_pipelines()
 	shader_stages[1] = load_shader("gain_subpasses/subpasses.frag", VK_SHADER_STAGE_FRAGMENT_BIT);
 
 	pipeline_create_info.subpass = 1;
+	depth_stencil_state.depthTestEnable = VK_FALSE;
+	depth_stencil_state.back.failOp = VK_STENCIL_OP_KEEP;
+	depth_stencil_state.back.depthFailOp = VK_STENCIL_OP_KEEP;
+	depth_stencil_state.back.passOp = VK_STENCIL_OP_KEEP;
+	depth_stencil_state.back.compareOp = VK_COMPARE_OP_EQUAL;
+	depth_stencil_state.front = depth_stencil_state.back;
 
 	VK_CHECK(vkCreateGraphicsPipelines(get_device().get_handle(), pipeline_cache, 1, &pipeline_create_info, nullptr, &color_pipeline));
 
@@ -278,18 +284,32 @@ void Gain_Subpasses::setup_render_pass()
 
 	dependencies[0].srcSubpass      = 0;
 	dependencies[0].dstSubpass      = 1;
-	dependencies[0].srcStageMask    = VK_PIPELINE_STAGE_ALL_GRAPHICS_BIT;
-	dependencies[0].dstStageMask    = VK_PIPELINE_STAGE_ALL_GRAPHICS_BIT;
-	dependencies[0].dstAccessMask   = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT;
+	dependencies[0].srcStageMask    = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+	dependencies[0].dstStageMask    = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 	dependencies[0].srcAccessMask   = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT;
+	dependencies[0].dstAccessMask   = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT;
 	dependencies[0].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
 
 	dependencies[1].srcSubpass      = VK_SUBPASS_EXTERNAL;
 	dependencies[1].dstSubpass      = 0;
+	dependencies[1].srcStageMask    = VK_PIPELINE_STAGE_ALL_GRAPHICS_BIT;
+	dependencies[1].dstStageMask    = VK_PIPELINE_STAGE_ALL_GRAPHICS_BIT;
+	dependencies[1].dstAccessMask   = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT;
+	dependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+
+	/*dependencies[0].srcSubpass      = VK_SUBPASS_EXTERNAL;
+	dependencies[0].dstSubpass      = 0;
+	dependencies[0].srcStageMask    = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+	dependencies[0].dstStageMask    = VK_PIPELINE_STAGE_ALL_GRAPHICS_BIT;
+	dependencies[0].dstAccessMask   = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT;
+	dependencies[0].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+
+	dependencies[1].srcSubpass      = 0;
+	dependencies[1].dstSubpass      = VK_SUBPASS_EXTERNAL;
 	dependencies[1].srcStageMask    = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 	dependencies[1].dstStageMask    = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-	dependencies[1].dstAccessMask   = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-	dependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+	dependencies[1].srcAccessMask   = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT;
+	dependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;*/
 
 	VkRenderPassCreateInfo render_pass_create_info = {};
 	render_pass_create_info.sType                  = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;

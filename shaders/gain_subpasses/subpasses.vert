@@ -22,8 +22,8 @@ layout(location = 0) out vec3 out_color;
 
 vec2 triangle_positions[3] = vec2[](
     vec2(0.5, -0.5),
-    vec2(-0.5, 0.5),
-    vec2(0.5, 0.5)
+    vec2(0.5, 0.5),
+    vec2(-0.5, 0.5)
 );
 
 vec3 triangle_colors[3] = vec3[](
