@@ -25,7 +25,6 @@
 #include "rendering/subpasses/forward_subpass.h"
 #include "stats/stats.h"
 
-
 Gain_Subpasses::Gain_Subpasses()
 {
 	zoom     = -2.5f;
@@ -61,7 +60,7 @@ void Gain_Subpasses::build_command_buffers()
 	VkCommandBufferBeginInfo command_buffer_begin_info = vkb::initializers::command_buffer_begin_info();
 
 	VkClearValue clear_values[2];
-	clear_values[0].color        =  {{0.1f, 0.1f, 0.2f, 1.0f}};
+	clear_values[0].color        = {{0.1f, 0.1f, 0.2f, 1.0f}};
 	clear_values[1].depthStencil = {0.0f, 0};
 
 	VkRenderPassBeginInfo render_pass_begin_info    = vkb::initializers::render_pass_begin_info();
@@ -92,14 +91,14 @@ void Gain_Subpasses::build_command_buffers()
 
 		vkCmdDraw(draw_cmd_buffers[i], 3, 1, 0, 0);
 
-		/* Advance to the next subpass */
+		// Advance to the next subpass
 		vkCmdNextSubpass(draw_cmd_buffers[i], VK_SUBPASS_CONTENTS_INLINE);
 
 		vkCmdBindPipeline(draw_cmd_buffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, color_pipeline);
 
-		vkCmdDraw(draw_cmd_buffers[i], 6, 1, 0, 0);
+		vkCmdDraw(draw_cmd_buffers[i], 3, 1, 0, 0);
 
-//		draw_ui(draw_cmd_buffers[i]);
+		//		draw_ui(draw_cmd_buffers[i]);
 
 		vkCmdEndRenderPass(draw_cmd_buffers[i]);
 
@@ -127,61 +126,61 @@ void Gain_Subpasses::prepare_pipelines()
 	VK_CHECK(vkCreatePipelineLayout(get_device().get_handle(), &layout_info, nullptr, &pipeline_layout));
 
 	VkPipelineInputAssemblyStateCreateInfo input_assembly_state =
-			vkb::initializers::pipeline_input_assembly_state_create_info(
-					VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
-					0,
-					VK_FALSE);
+	    vkb::initializers::pipeline_input_assembly_state_create_info(
+	        VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
+	        0,
+	        VK_FALSE);
 
 	VkPipelineRasterizationStateCreateInfo rasterization_state =
-			vkb::initializers::pipeline_rasterization_state_create_info(
-					VK_POLYGON_MODE_FILL,
-					VK_CULL_MODE_BACK_BIT,
-					VK_FRONT_FACE_CLOCKWISE,
-					0);
+	    vkb::initializers::pipeline_rasterization_state_create_info(
+	        VK_POLYGON_MODE_FILL,
+	        VK_CULL_MODE_BACK_BIT,
+	        VK_FRONT_FACE_CLOCKWISE,
+	        0);
 
 	VkPipelineColorBlendAttachmentState blend_attachment_state =
-			vkb::initializers::pipeline_color_blend_attachment_state(
-					0xf,
-					VK_FALSE);
+	    vkb::initializers::pipeline_color_blend_attachment_state(
+	        0xf,
+	        VK_FALSE);
 
 	VkPipelineColorBlendStateCreateInfo color_blend_state =
-			vkb::initializers::pipeline_color_blend_state_create_info(
-					1,
-					&blend_attachment_state);
+	    vkb::initializers::pipeline_color_blend_state_create_info(
+	        1,
+	        &blend_attachment_state);
 
 	// Note: Using Reversed depth-buffer for increased precision, so Greater depth values are kept
 	VkPipelineDepthStencilStateCreateInfo depth_stencil_state =
-			vkb::initializers::pipeline_depth_stencil_state_create_info(
-					VK_FALSE,
-					VK_FALSE,
-					VK_COMPARE_OP_LESS_OR_EQUAL);
+	    vkb::initializers::pipeline_depth_stencil_state_create_info(
+	        VK_FALSE,
+	        VK_FALSE,
+	        VK_COMPARE_OP_GREATER);
 	depth_stencil_state.stencilTestEnable = VK_TRUE;
-	depth_stencil_state.back.failOp = VK_STENCIL_OP_REPLACE;
-	depth_stencil_state.back.depthFailOp = VK_STENCIL_OP_REPLACE;
-	depth_stencil_state.back.passOp = VK_STENCIL_OP_REPLACE;
-	depth_stencil_state.back.compareOp = VK_COMPARE_OP_ALWAYS;
-	depth_stencil_state.back.compareMask = 0xff;
-	depth_stencil_state.back.writeMask = 0xff;
-	depth_stencil_state.back.reference = 0x44;
-	depth_stencil_state.front = depth_stencil_state.back;
+	depth_stencil_state.back.failOp       = VK_STENCIL_OP_REPLACE;
+	depth_stencil_state.back.depthFailOp  = VK_STENCIL_OP_REPLACE;
+	depth_stencil_state.back.passOp       = VK_STENCIL_OP_REPLACE;
+	depth_stencil_state.back.compareOp    = VK_COMPARE_OP_ALWAYS;
+	depth_stencil_state.back.compareMask  = 0xff;
+	depth_stencil_state.back.writeMask    = 0xff;
+	depth_stencil_state.back.reference    = 1;
+	depth_stencil_state.front             = depth_stencil_state.back;
 
 	VkPipelineViewportStateCreateInfo viewport_state =
-			vkb::initializers::pipeline_viewport_state_create_info(1, 1, 0);
+	    vkb::initializers::pipeline_viewport_state_create_info(1, 1, 0);
 
 	VkPipelineMultisampleStateCreateInfo multisample_state =
-			vkb::initializers::pipeline_multisample_state_create_info(
-					VK_SAMPLE_COUNT_1_BIT,
-					0);
+	    vkb::initializers::pipeline_multisample_state_create_info(
+	        VK_SAMPLE_COUNT_1_BIT,
+	        0);
 
 	std::vector<VkDynamicState> dynamic_state_enables = {
-			VK_DYNAMIC_STATE_VIEWPORT,
-			VK_DYNAMIC_STATE_SCISSOR};
+	    VK_DYNAMIC_STATE_VIEWPORT,
+	    VK_DYNAMIC_STATE_SCISSOR};
 
 	VkPipelineDynamicStateCreateInfo dynamic_state =
-			vkb::initializers::pipeline_dynamic_state_create_info(
-					dynamic_state_enables.data(),
-					static_cast<uint32_t>(dynamic_state_enables.size()),
-					0);
+	    vkb::initializers::pipeline_dynamic_state_create_info(
+	        dynamic_state_enables.data(),
+	        static_cast<uint32_t>(dynamic_state_enables.size()),
+	        0);
 
 	// Load shaders
 	std::array<VkPipelineShaderStageCreateInfo, 2> shader_stages;
@@ -192,10 +191,10 @@ void Gain_Subpasses::prepare_pipelines()
 	VkPipelineVertexInputStateCreateInfo vertex_input_state = vkb::initializers::pipeline_vertex_input_state_create_info();
 
 	VkGraphicsPipelineCreateInfo pipeline_create_info =
-			vkb::initializers::pipeline_create_info(
-					pipeline_layout,
-					render_pass,
-					0);
+	    vkb::initializers::pipeline_create_info(
+	        pipeline_layout,
+	        render_pass,
+	        0);
 
 	pipeline_create_info.pVertexInputState   = &vertex_input_state;
 	pipeline_create_info.pInputAssemblyState = &input_assembly_state;
@@ -215,16 +214,15 @@ void Gain_Subpasses::prepare_pipelines()
 	shader_stages[0] = load_shader("gain_subpasses/subpasses.full.vert", VK_SHADER_STAGE_VERTEX_BIT);
 	shader_stages[1] = load_shader("gain_subpasses/subpasses.frag", VK_SHADER_STAGE_FRAGMENT_BIT);
 
-	pipeline_create_info.subpass = 1;
-	depth_stencil_state.depthTestEnable = VK_FALSE;
-	depth_stencil_state.back.failOp = VK_STENCIL_OP_KEEP;
+	pipeline_create_info.subpass         = 1;
+	depth_stencil_state.back.failOp      = VK_STENCIL_OP_KEEP;
 	depth_stencil_state.back.depthFailOp = VK_STENCIL_OP_KEEP;
-	depth_stencil_state.back.passOp = VK_STENCIL_OP_KEEP;
-	depth_stencil_state.back.compareOp = VK_COMPARE_OP_EQUAL;
-	depth_stencil_state.front = depth_stencil_state.back;
+	depth_stencil_state.back.passOp      = VK_STENCIL_OP_REPLACE;
+	depth_stencil_state.back.compareOp   = VK_COMPARE_OP_NOT_EQUAL;
+	depth_stencil_state.front            = depth_stencil_state.back;
+	depth_stencil_state.depthTestEnable  = VK_FALSE;
 
 	VK_CHECK(vkCreateGraphicsPipelines(get_device().get_handle(), pipeline_cache, 1, &pipeline_create_info, nullptr, &color_pipeline));
-
 }
 
 void Gain_Subpasses::setup_render_pass()
@@ -259,8 +257,8 @@ void Gain_Subpasses::setup_render_pass()
 
 	VkSubpassDescription subpass_description    = {};
 	subpass_description.pipelineBindPoint       = VK_PIPELINE_BIND_POINT_GRAPHICS;
-	subpass_description.colorAttachmentCount    = 0;
-	subpass_description.pColorAttachments       = nullptr;
+	subpass_description.colorAttachmentCount    = 1;
+	subpass_description.pColorAttachments       = &color_reference;
 	subpass_description.pDepthStencilAttachment = &depth_reference;
 	subpass_description.inputAttachmentCount    = 0;
 	subpass_description.pInputAttachments       = nullptr;
@@ -269,47 +267,27 @@ void Gain_Subpasses::setup_render_pass()
 	subpass_description.pResolveAttachments     = nullptr;
 
 	std::vector<VkSubpassDescription> subpass_descriptions;
-
-	/* first a depthstencil-only subpass */
 	subpass_descriptions.push_back(subpass_description);
-
-	subpass_description.colorAttachmentCount    = 1;
-	subpass_description.pColorAttachments       = &color_reference;
-
-	/* then depthstencil and color */
 	subpass_descriptions.push_back(subpass_description);
 
 	// Subpass dependencies for layout transitions
 	std::array<VkSubpassDependency, 2> dependencies;
 
-	dependencies[0].srcSubpass      = 0;
-	dependencies[0].dstSubpass      = 1;
+	dependencies[0].srcSubpass      = VK_SUBPASS_EXTERNAL;
+	dependencies[0].dstSubpass      = 0;
 	dependencies[0].srcStageMask    = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 	dependencies[0].dstStageMask    = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-	dependencies[0].srcAccessMask   = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT;
-	dependencies[0].dstAccessMask   = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT;
-	dependencies[0].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
-
-	dependencies[1].srcSubpass      = VK_SUBPASS_EXTERNAL;
-	dependencies[1].dstSubpass      = 0;
-	dependencies[1].srcStageMask    = VK_PIPELINE_STAGE_ALL_GRAPHICS_BIT;
-	dependencies[1].dstStageMask    = VK_PIPELINE_STAGE_ALL_GRAPHICS_BIT;
-	dependencies[1].dstAccessMask   = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT;
-	dependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
-
-	/*dependencies[0].srcSubpass      = VK_SUBPASS_EXTERNAL;
-	dependencies[0].dstSubpass      = 0;
-	dependencies[0].srcStageMask    = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
-	dependencies[0].dstStageMask    = VK_PIPELINE_STAGE_ALL_GRAPHICS_BIT;
-	dependencies[0].dstAccessMask   = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT;
+	dependencies[0].srcAccessMask   = 0;
+	dependencies[0].dstAccessMask   = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 	dependencies[0].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
 
 	dependencies[1].srcSubpass      = 0;
-	dependencies[1].dstSubpass      = VK_SUBPASS_EXTERNAL;
-	dependencies[1].srcStageMask    = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-	dependencies[1].dstStageMask    = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-	dependencies[1].srcAccessMask   = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT;
-	dependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;*/
+	dependencies[1].dstSubpass      = 1;
+	dependencies[1].srcStageMask    = VK_PIPELINE_STAGE_ALL_GRAPHICS_BIT;
+	dependencies[1].dstStageMask    = VK_PIPELINE_STAGE_ALL_GRAPHICS_BIT;
+	dependencies[1].srcAccessMask   = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT;
+	dependencies[1].dstAccessMask   = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT;
+	dependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
 
 	VkRenderPassCreateInfo render_pass_create_info = {};
 	render_pass_create_info.sType                  = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;

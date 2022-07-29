@@ -22,6 +22,6 @@ get_filename_component(CATEGORY_NAME ${PARENT_DIR} NAME)
 add_sample(
     ID ${FOLDER_NAME}
     CATEGORY ${CATEGORY_NAME}
-    AUTHOR "Khronos"
+    AUTHOR "Gain"
     NAME "gain_subpasses"
-    DESCRIPTION "Sample description")
+    DESCRIPTION "Use of Vulkan subpasses for stencil test")

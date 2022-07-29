@@ -24,22 +24,22 @@
 class Gain_Subpasses : public ApiVulkanSample
 {
   public:
-    VkPipeline stencil_pipeline;
-    VkPipeline color_pipeline;
+	VkPipeline stencil_pipeline;
+	VkPipeline color_pipeline;
 
-    VkPipelineLayout      pipeline_layout;
+	VkPipelineLayout pipeline_layout;
 
-    Gain_Subpasses();
-    ~Gain_Subpasses();
-    virtual void request_gpu_features(vkb::PhysicalDevice &gpu) override;
-    void         build_command_buffers() override;
-    void         draw();
-    void         prepare_pipelines();
-    bool         prepare(vkb::Platform &platform) override;
-    virtual void setup_render_pass() override;
-    virtual void render(float delta_time) override;
-    virtual void view_changed() override;
-    virtual void on_update_ui_overlay(vkb::Drawer &drawer) override;
+	Gain_Subpasses();
+	~Gain_Subpasses();
+	virtual void request_gpu_features(vkb::PhysicalDevice &gpu) override;
+	void         build_command_buffers() override;
+	void         draw();
+	void         prepare_pipelines();
+	bool         prepare(vkb::Platform &platform) override;
+	virtual void setup_render_pass() override;
+	virtual void render(float delta_time) override;
+	virtual void view_changed() override;
+	virtual void on_update_ui_overlay(vkb::Drawer &drawer) override;
 };
 
 std::unique_ptr<vkb::VulkanSample> create_gain_subpasses();

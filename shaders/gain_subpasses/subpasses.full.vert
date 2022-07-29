@@ -20,22 +20,17 @@ precision mediump float;
 
 layout(location = 0) out vec3 out_color;
 
-vec2 triangle_positions[6] = vec2[](
-    vec2(-1.0, -1.0),
-    vec2(1.0, 1.0),
-    vec2(1.0, -1.0),
-    vec2(1.0, 1.0),
-    vec2(-1.0, -1.0),
-    vec2(-1.0, 1.0)
+
+vec2 triangle_positions[3] = vec2[](
+vec2(0.6, -0.7),
+vec2(0.6, 0.6),
+vec2(-0.7, 0.6)
 );
 
-vec3 triangle_colors[6] = vec3[](
-    vec3(1.0, 1.0, 0.0),
-    vec3(1.0, 0.0, 0.0),
-    vec3(1.0, 0.0, 0.0),
-    vec3(1.0, 1.0, 0.0),
-    vec3(1.0, 0.0, 0.0),
-    vec3(1.0, 0.0, 0.0)
+vec3 triangle_colors[3] = vec3[](
+vec3(1.0, 1.0, 0.0),
+vec3(1.0, 1.0, 0.0),
+vec3(1.0, 1.0, 0.0)
 );
 
 void main()
