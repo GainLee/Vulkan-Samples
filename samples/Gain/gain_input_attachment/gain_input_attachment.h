@@ -17,46 +17,36 @@
 
 #pragma once
 
+#include <api_vulkan_sample.h>
 #include "rendering/render_pipeline.h"
 #include "scene_graph/components/camera.h"
-#include <api_vulkan_sample.h>
 
-class Gain_DynamicUniformBuffer : public ApiVulkanSample
+class Gain_InputAttachment : public ApiVulkanSample
 {
   public:
 	VkPipeline pipeline;
 
+	Texture input_texture;
 	VkDescriptorSetLayout              descriptor_set_layout;        // Particle system rendering shader binding layout
 	VkDescriptorSet                    descriptor_set;               // Particle system rendering shader bindings
 	VkPipelineLayout                   pipeline_layout;
 
-	size_t dynamic_alignment = 0;
-
-	std::unique_ptr<vkb::core::Buffer> dynamic;
-
-	// One big uniform buffer that contains all matrices
-	// Note that we need to manually allocate the data to cope for GPU-specific uniform buffer offset alignments
-	struct UboDataDynamic
-	{
-		glm::mat4 *model = nullptr;
-	} ubo_data_dynamic;
-
-	Gain_DynamicUniformBuffer();
-	~Gain_DynamicUniformBuffer();
+	Gain_InputAttachment();
+	~Gain_InputAttachment();
 	virtual void request_gpu_features(vkb::PhysicalDevice &gpu) override;
 	void         setup_descriptor_pool();
 	void         setup_descriptor_set_layout();
 	void         setup_descriptor_set();
-	void         prepare_uniform_buffers();
-	void         update_dynamic_uniform_buffer();
 	void         build_command_buffers() override;
 	void         draw();
+	void         prepare_input_attachment();
 	void         prepare_pipelines();
 	bool         prepare(vkb::Platform &platform) override;
 	virtual void setup_render_pass() override;
+	virtual void setup_framebuffer() override;
 	virtual void render(float delta_time) override;
 	virtual void view_changed() override;
 	virtual void on_update_ui_overlay(vkb::Drawer &drawer) override;
 };
 
-std::unique_ptr<vkb::VulkanSample> create_gain_dynamic_uniform_buffer();
+std::unique_ptr<vkb::VulkanSample> create_gain_input_attachment();
