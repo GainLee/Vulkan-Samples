@@ -1,4 +1,4 @@
-#version 320 es
+#version 450
 /* Copyright (c) 2019, Arm Limited and Contributors
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -16,10 +16,7 @@
  * limitations under the License.
  */
 
-precision mediump float;
-
-layout (input_attachment_index = 0, set = 0, binding = 0) uniform subpassInput
-myInputAttachment;
+layout (input_attachment_index = 0, set = 0, binding = 0) uniform subpassInput myInputAttachment;
 
 layout(location = 0) out vec4 out_color;
 

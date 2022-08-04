@@ -17,19 +17,29 @@
 
 #pragma once
 
-#include <api_vulkan_sample.h>
 #include "rendering/render_pipeline.h"
 #include "scene_graph/components/camera.h"
+#include <api_vulkan_sample.h>
+#include <ktx.h>
 
 class Gain_InputAttachment : public ApiVulkanSample
 {
   public:
 	VkPipeline pipeline;
 
-	Texture input_texture;
-	VkDescriptorSetLayout              descriptor_set_layout;        // Particle system rendering shader binding layout
-	VkDescriptorSet                    descriptor_set;               // Particle system rendering shader bindings
-	VkPipelineLayout                   pipeline_layout;
+	struct Texture
+	{
+		VkSampler      sampler;
+		VkImage        image;
+		VkImageLayout  image_layout;
+		VkDeviceMemory device_memory;
+		VkImageView    view;
+		uint32_t       width, height;
+		uint32_t       mip_levels;
+	} input_Texture;
+	VkDescriptorSetLayout descriptor_set_layout;        // Particle system rendering shader binding layout
+	VkDescriptorSet       descriptor_set;               // Particle system rendering shader bindings
+	VkPipelineLayout      pipeline_layout;
 
 	Gain_InputAttachment();
 	~Gain_InputAttachment();
@@ -42,6 +52,7 @@ class Gain_InputAttachment : public ApiVulkanSample
 	void         prepare_input_attachment();
 	void         prepare_pipelines();
 	bool         prepare(vkb::Platform &platform) override;
+	void         destroy_texture(Texture texture);
 	virtual void setup_render_pass() override;
 	virtual void setup_framebuffer() override;
 	virtual void render(float delta_time) override;
