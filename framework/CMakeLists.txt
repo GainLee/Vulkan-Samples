@@ -280,7 +280,8 @@ set(CORE_FILES
     core/vulkan_resource.cpp
     core/hpp_device.cpp
     core/hpp_instance.cpp
-	core/hpp_physical_device.cpp
+    core/hpp_physical_device.cpp
+    core/hpp_queue.cpp
     core/hpp_vulkan_resource.cpp
 )
 
@@ -456,6 +457,11 @@ endif()
 
 if(${VKB_VULKAN_DEBUG})
     target_compile_definitions(${PROJECT_NAME} PUBLIC VKB_VULKAN_DEBUG)
+endif()
+
+if(${VKB_ENABLE_PORTABILITY})
+    message(STATUS "Vulkan Portability extension is enabled")
+    target_compile_definitions(${PROJECT_NAME} PUBLIC VKB_ENABLE_PORTABILITY)
 endif()
 
 if(${VKB_WARNINGS_AS_ERRORS})
