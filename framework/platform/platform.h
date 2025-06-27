@@ -67,7 +67,7 @@ class Platform
 	 * @brief Handles the main update and render loop
 	 * @return An exit code representing the outcome of the loop
 	 */
-	ExitCode main_loop();
+	virtual ExitCode main_loop();
 
 	/**
 	 * @brief Handles the update and render of a frame.

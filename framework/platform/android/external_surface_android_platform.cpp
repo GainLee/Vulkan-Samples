@@ -147,6 +147,20 @@ void ExternalSurfaceAndroidPlatform::process_android_input_events(void)
 {
 }
 
+	/**
+	 * @brief Handles the main update and render loop
+	 * @return An exit code representing the outcome of the loop
+	 */
+ExitCode ExternalSurfaceAndroidPlatform::main_loop()
+{
+	ExitCode exit_code = ExitCode::Success;
+
+	// Just call the main loop frame one time, we render manually in the Java side
+	exit_code = Platform::main_loop_frame();
+
+	return exit_code;
+}
+
 void ExternalSurfaceAndroidPlatform::terminate(ExitCode code)
 {
 	switch (code)

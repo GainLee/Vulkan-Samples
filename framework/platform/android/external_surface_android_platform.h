@@ -33,6 +33,8 @@ class ExternalSurfaceAndroidPlatform : public Platform
 
 	virtual void terminate(ExitCode code) override;
 
+	virtual ExitCode main_loop() override;
+
 	/**
 	 * @brief Sends a notification in the task bar
 	 * @param message The message to display
