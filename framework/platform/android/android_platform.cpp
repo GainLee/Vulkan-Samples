@@ -37,6 +37,7 @@
 #include "platform/android/android_window.h"
 #include "platform/input_events.h"
 
+#ifndef EXTERNAL_SURFACE
 extern "C"
 {
 	JNIEXPORT jobjectArray JNICALL
@@ -70,6 +71,7 @@ extern "C"
 		return j_sample_list;
 	}
 }
+#endif
 
 namespace vkb
 {

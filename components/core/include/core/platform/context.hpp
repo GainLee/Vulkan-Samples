@@ -26,6 +26,7 @@ namespace vkb
 class UnixPlatformContext;
 class WindowsPlatformContext;
 class AndroidPlatformContext;
+class ExternalSurfacePlatformContext;
 
 /**
  * @brief A platform context contains abstract platform specific operations
@@ -42,6 +43,7 @@ class PlatformContext
 	friend class UnixPlatformContext;
 	friend class WindowsPlatformContext;
 	friend class AndroidPlatformContext;
+	friend class ExternalSurfacePlatformContext;
 
   public:
 	virtual ~PlatformContext() = default;

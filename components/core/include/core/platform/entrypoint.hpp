@@ -28,17 +28,30 @@
 #endif
 
 #if defined(PLATFORM__ANDROID)
-#	include <game-activity/native_app_glue/android_native_app_glue.h>
-extern std::unique_ptr<vkb::PlatformContext> create_platform_context(android_app *state);
+	#if defined(EXTERNAL_SURFACE)
+	#	include <android/asset_manager.h>
+	extern std::unique_ptr<vkb::PlatformContext> create_platform_context(AAssetManager *asset_manager);
+	#	define CUSTOM_MAIN(context_name)                      \
+			int  platform_main(const vkb::PlatformContext &);  \
+			void init_platform_context(AAssetManager *asset_manager)              \
+			{                                                  \
+				auto context = create_platform_context(asset_manager); \
+				platform_main(*context);                       \
+			}                                                  \
+			int platform_main(const vkb::PlatformContext &context_name)
+	#else
+	#	include <game-activity/native_app_glue/android_native_app_glue.h>
+	extern std::unique_ptr<vkb::PlatformContext> create_platform_context(android_app *state);
 
-#	define CUSTOM_MAIN(context_name)                      \
-		int  platform_main(const vkb::PlatformContext &);  \
-		void android_main(android_app *state)              \
-		{                                                  \
-			auto context = create_platform_context(state); \
-			platform_main(*context);                       \
-		}                                                  \
-		int platform_main(const vkb::PlatformContext &context_name)
+	#	define CUSTOM_MAIN(context_name)                      \
+			int  platform_main(const vkb::PlatformContext &);  \
+			void android_main(android_app *state)              \
+			{                                                  \
+				auto context = create_platform_context(state); \
+				platform_main(*context);                       \
+			}                                                  \
+			int platform_main(const vkb::PlatformContext &context_name)
+	#endif
 #elif defined(PLATFORM__WINDOWS)
 #	include <Windows.h>
 extern std::unique_ptr<vkb::PlatformContext> create_platform_context(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR lpCmdLine, INT nCmdShow);

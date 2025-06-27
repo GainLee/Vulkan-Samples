@@ -1,0 +1,43 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# Android 平台实现指南
+
+## Android 平台核心文件
+
+- **[framework/platform/android/android_platform.h](mdc:framework/platform/android/android_platform.h)** - Android 平台抽象类定义
+- **[framework/platform/android/android_platform.cpp](mdc:framework/platform/android/android_platform.cpp)** - Android 平台实现
+- **[framework/platform/android/android_window.h](mdc:framework/platform/android/android_window.h)** - Android 窗口管理
+- **[app/android/AndroidManifest.xml](mdc:app/android/AndroidManifest.xml)** - Android 应用清单
+
+## 关键组件
+
+### AndroidPlatform 类
+- 继承自 Platform 基类
+- 使用 `android_app` 结构体（来自 native_app_glue）
+- 处理 Android 生命周期事件
+- 管理 Surface 创建和销毁
+
+### Activity 类型
+1. **SampleLauncherActivity** - 示例选择器
+2. **NativeSampleActivity** - 原生示例运行器
+
+### 输入处理
+- 触摸事件处理
+- 键盘事件映射（KeyCode 转换）
+- GameActivity 集成
+
+## 当前架构限制
+
+当前实现依赖 `native_app_glue`，限制了与 Java 层的交互。要支持上层传递的 Surface，需要：
+
+1. 创建 JNI 接口接收 Surface
+2. 修改 AndroidPlatform 支持外部 Surface
+3. 更新窗口创建逻辑
+4. 处理 Surface 生命周期管理
+
+## JNI 导出函数
+
+- `Java_com_khronos_vulkan_1samples_SampleLauncherActivity_getSamples` - 获取示例列表

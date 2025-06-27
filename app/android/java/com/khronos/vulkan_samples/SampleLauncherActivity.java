@@ -21,10 +21,16 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
@@ -38,24 +44,18 @@ import java.util.regex.Pattern;
 import androidx.appcompat.widget.Toolbar;
 
 import com.khronos.vulkan_samples.common.Notifications;
-import com.khronos.vulkan_samples.model.Permission;
 import com.khronos.vulkan_samples.model.Sample;
 import com.khronos.vulkan_samples.model.SampleStore;
-import com.khronos.vulkan_samples.views.PermissionView;
 import com.khronos.vulkan_samples.views.SampleListView;
 
 public class SampleLauncherActivity extends AppCompatActivity {
 
     SampleListView sampleListView;
-    PermissionView permissionView;
 
     private boolean isBenchmarkMode = false;
     private boolean isHeadless = false;
 
     public SampleStore samples;
-
-    // Required sample permissions
-    List<Permission> permissions;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,17 +70,8 @@ public class SampleLauncherActivity extends AppCompatActivity {
             samples = new SampleStore(Arrays.asList(getSamples()));
         }
 
-        // Required Permissions
-        permissions = new ArrayList<>();
-
-        if (checkPermissions()) {
-            // Permissions previously granted skip requesting them
-            parseArguments();
-            showSamples();
-        } else {
-            // Chain request permissions
-            requestNextPermission();
-        }
+        parseArguments();
+        showSamples();
     }
 
     @Override
@@ -136,13 +127,6 @@ public class SampleLauncherActivity extends AppCompatActivity {
         }
     }
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
-            @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        requestNextPermission();
-    }
-
     /**
      * Load a native library
      *
@@ -163,70 +147,7 @@ public class SampleLauncherActivity extends AppCompatActivity {
         return status;
     }
 
-    /**
-     * Chain request permissions from the required permission list. When called the
-     * next unrequested permission with be requested If all permission are requested
-     * but not all granted; requested states will be reset and the PermissionView
-     * will be shown
-     */
-    public void requestNextPermission() {
-        boolean granted = true;
 
-        for (Permission permission : permissions) {
-
-            // Permission previously requested but not granted
-            if (!permission.granted(getApplication())) {
-                // Permission not previously requested - request it
-                if (!permission.isRequested()) {
-                    permission.request(this);
-                    return;
-                }
-
-                granted = false;
-            }
-        }
-
-        if (granted) {
-            parseArguments();
-            showSamples();
-        } else {
-            // Reset all permissions request state so they can be requested again
-            for (Permission permission : permissions) {
-                permission.setRequested(false);
-            }
-            showPermissionsMessage();
-        }
-    }
-
-    /**
-     * Check all required permissions have been granted
-     *
-     * @return True if all granted; False otherwise
-     */
-    public boolean checkPermissions() {
-        for (Permission permission : permissions) {
-            if (!permission.granted(getApplicationContext())) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    /**
-     * Show/Create the Permission View. Hides all other views
-     */
-    public void showPermissionsMessage() {
-        if (permissionView == null) {
-            permissionView = new PermissionView(this);
-        }
-
-        if (sampleListView != null) {
-            sampleListView.hide();
-        }
-
-        permissionView.show();
-    }
 
     /**
      * Show/Create the Sample View. Hides all other views
@@ -234,10 +155,6 @@ public class SampleLauncherActivity extends AppCompatActivity {
     public void showSamples() {
         if (sampleListView == null) {
             sampleListView = new SampleListView(this);
-        }
-
-        if (permissionView != null) {
-            permissionView.hide();
         }
 
         sampleListView.show();
@@ -271,7 +188,8 @@ public class SampleLauncherActivity extends AppCompatActivity {
                 }
 
             } else if (extras.containsKey("sample")) {
-                launchSample(extras.getString("sample"));
+                // launchSample(extras.getString("sample"));
+                launchSampleWithExternalSurface(extras.getString("sample"));
                 finishAffinity();
             } else if (extras.containsKey("test")) {
                 launchTest(extras.getString("test"));
@@ -300,6 +218,20 @@ public class SampleLauncherActivity extends AppCompatActivity {
 
     public void launchWithCommandArguments(String... args) {
         setArguments(args);
+        // Use SurfaceSampleActivity for better UI experience
+        Intent intent = new Intent(SampleLauncherActivity.this, SurfaceSampleActivity.class);
+        intent.putExtra("sample_args", args);
+        startActivity(intent);
+    }
+
+    /**
+     * Launch with command arguments using traditional NativeActivity mode
+     * This provides the original approach for compatibility
+     *
+     * @param args Command line arguments
+     */
+    public void launchWithCommandArgumentsNative(String... args) {
+        setArguments(args);
         Intent intent = new Intent(SampleLauncherActivity.this, NativeSampleActivity.class);
         startActivity(intent);
     }
@@ -316,7 +248,77 @@ public class SampleLauncherActivity extends AppCompatActivity {
             showSamples();
             return;
         }
-        launchWithCommandArguments("sample", sampleID);
+        // Use the new external surface mode for better UI
+        launchSampleWithExternalSurface(sampleID);
+    }
+
+    /**
+     * Launch a sample using traditional NativeActivity mode
+     * This provides the original GameActivity approach for compatibility
+     *
+     * @param sampleID The ID of the sample to launch
+     */
+    public void launchSampleWithNativeActivity(String sampleID) {
+        Sample sample = samples.findByID(sampleID);
+        if (sample == null) {
+            Notifications.toast(this, "Could not find sample " + sampleID);
+            showSamples();
+            return;
+        }
+        
+        // Use traditional approach with setArguments and NativeSampleActivity
+        List<String> arguments = new ArrayList<>();
+        arguments.add("sample");
+        arguments.add(sampleID);
+        
+        if (isBenchmarkMode) {
+            arguments.add("--benchmark");
+        }
+        if (isHeadless) {
+            arguments.add("--headless_surface");
+        }
+        
+        // Set arguments for native platform
+        String[] argArray = new String[arguments.size()];
+        sendArgumentsToPlatform(arguments.toArray(argArray));
+        
+        // Launch traditional NativeActivity
+        Intent intent = new Intent(SampleLauncherActivity.this, NativeSampleActivity.class);
+        startActivity(intent);
+    }
+
+    /**
+     * Launch a sample using external surface mode (SurfaceSampleActivity)
+     * This provides an alternative to the traditional GameActivity approach
+     *
+     * @param sampleID The ID of the sample to launch
+     */
+    public void launchSampleWithExternalSurface(String sampleID) {
+        Sample sample = samples.findByID(sampleID);
+        if (sample == null) {
+            Notifications.toast(this, "Could not find sample " + sampleID);
+            showSamples();
+            return;
+        }
+
+        // Prepare arguments for the external surface mode
+        List<String> arguments = new ArrayList<>();
+        arguments.add("sample");
+        arguments.add(sampleID);
+        
+        if (isBenchmarkMode) {
+            arguments.add("--benchmark");
+        }
+        if (isHeadless) {
+            arguments.add("--headless_surface");
+        }
+
+        setArguments(arguments.toArray(new String[0]));
+
+        // Launch the external surface activity
+        Intent intent = new Intent(SampleLauncherActivity.this, SurfaceSampleActivity.class);
+        intent.putExtra("sample_args", arguments.toArray(new String[0]));
+        startActivity(intent);
     }
 
     /**

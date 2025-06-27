@@ -1,0 +1,50 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# 框架架构指南
+
+## 核心抽象层
+
+### Platform 系统
+- **基类**: [framework/platform/platform.h](mdc:framework/platform/platform.h)
+- **实现**: 各平台特定实现（Android, Windows, Linux, iOS）
+- **职责**: 窗口管理、事件处理、文件系统访问
+
+### Vulkan 核心封装
+- **[framework/core/](mdc:framework/core/)** - Vulkan 对象的 C++ 封装
+- **设备管理**: Device, PhysicalDevice, Instance
+- **内存管理**: Buffer, Image, Memory allocation
+- **同步原语**: Semaphore, Fence, Event
+
+### 渲染系统
+- **[framework/rendering/](mdc:framework/rendering/)** - 渲染管线抽象
+- **RenderContext**: 渲染上下文管理
+- **Subpass**: 渲染子通道系统
+- **PipelineState**: 管线状态管理
+
+## 应用程序架构
+
+### VulkanSample 基类
+- [framework/api_vulkan_sample.h](mdc:framework/api_vulkan_sample.h)
+- 所有示例的基类
+- 提供标准的初始化和渲染流程
+
+### 组件系统
+- **[framework/scene_graph/](mdc:framework/scene_graph/)** - 场景图实现
+- **Component**: 可挂载的组件系统
+- **Node**: 场景图节点
+- **Transform**: 变换组件
+
+### 插件系统
+- **[app/plugins/](mdc:app/plugins/)** - 插件管理
+- **可扩展功能**: 批处理模式、基准测试、截图等
+- **运行时配置**: 动态加载和配置
+
+## 关键设计模式
+
+1. **RAII**: 资源自动管理
+2. **工厂模式**: 对象创建抽象
+3. **观察者模式**: 事件系统
+4. **策略模式**: 平台特定实现

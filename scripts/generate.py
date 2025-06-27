@@ -80,7 +80,10 @@ def generate_android_gradle(args):
             "-DJAVA_DIRS={}".format(os.path.join(ROOT_DIR, "app", "android", "java")),
             "-DRES_DIRS={}".format(os.path.join(ROOT_DIR, "app", "android", "res")),
             "-DOUTPUT_DIR={}".format(output_dir),
-            "-DASSET_DIRS=",
+            "-DASSET_DIRS={};{}".format(
+                os.path.join(ROOT_DIR, "assets"),
+                os.path.join(ROOT_DIR, "shaders")
+            ),
             "-DJNI_LIBS_DIRS=",
             "-DNATIVE_SCRIPT={}".format(os.path.join(ROOT_DIR, "CMakeLists.txt")),
             "-P",

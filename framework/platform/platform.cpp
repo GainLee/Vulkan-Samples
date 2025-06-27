@@ -98,6 +98,12 @@ ExitCode Platform::initialize(const std::vector<Plugin *> &plugins_)
 
 	std::deque<std::string> argumentDeque(arguments.begin(), arguments.end());
 
+	LOGI("command_map: {}", command_map.size());
+	for (auto &[command, plugin] : command_map)
+	{
+		LOGI("command: {}, plugin: {}", command, plugin->get_name());
+	}
+	
 	// the arguments have to start with a command
 	auto commandIt = command_map.find(argumentDeque[0]);
 	if (commandIt == command_map.end())

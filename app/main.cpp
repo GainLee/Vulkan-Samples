@@ -27,7 +27,11 @@
 #endif
 
 #if defined(PLATFORM__ANDROID)
-#	include "platform/android/android_platform.h"
+#	ifdef EXTERNAL_SURFACE
+#		include "platform/android/external_surface_android_platform.h"
+#	else
+#		include "platform/android/android_platform.h"
+#	endif
 #elif defined(PLATFORM__WINDOWS)
 #	include "platform/windows/windows_platform.h"
 #elif defined(PLATFORM__LINUX_D2D)
@@ -45,7 +49,11 @@ CUSTOM_MAIN(context)
 	vkb::filesystem::init_with_context(context);
 
 #if defined(PLATFORM__ANDROID)
+#	ifdef EXTERNAL_SURFACE
+	vkb::ExternalSurfaceAndroidPlatform platform{context};
+#	else
 	vkb::AndroidPlatform platform{context};
+#	endif
 #elif defined(PLATFORM__WINDOWS)
 	vkb::WindowsPlatform platform{context};
 #elif defined(PLATFORM__LINUX_D2D)

@@ -1,0 +1,38 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# Vulkan-Samples 项目结构指南
+
+## 主要目录结构
+
+- **[app/](mdc:app/)** - 应用程序入口点和平台特定配置
+  - [main.cpp](mdc:app/main.cpp) - 主程序入口，处理多平台初始化
+  - [android/](mdc:app/android/) - Android 特定配置和清单文件
+  - [plugins/](mdc:app/plugins/) - 应用插件系统
+
+- **[framework/](mdc:framework/)** - 核心框架代码
+  - [platform/](mdc:framework/platform/) - 平台抽象层实现
+  - [core/](mdc:framework/core/) - Vulkan 核心封装
+  - [rendering/](mdc:framework/rendering/) - 渲染管线和上下文
+  - [scene_graph/](mdc:framework/scene_graph/) - 场景图和组件系统
+
+- **[samples/](mdc:samples/)** - Vulkan 示例程序
+  - [api/](mdc:samples/api/) - 基础 API 示例
+  - [performance/](mdc:samples/performance/) - 性能优化示例
+  - [extensions/](mdc:samples/extensions/) - 扩展功能示例
+
+- **[components/](mdc:components/)** - 平台特定组件
+  - [android/](mdc:components/android/) - Android 组件实现
+
+- **[shaders/](mdc:shaders/)** - 着色器文件
+- **[assets/](mdc:assets/)** - 资源文件（纹理、模型等）
+- **[third_party/](mdc:third_party/)** - 第三方依赖库
+
+## 项目特点
+
+- 跨平台支持：Android, iOS, Windows, Linux, macOS
+- 模块化架构：框架与示例分离
+- 插件系统：支持可扩展的功能插件
+- 现代 C++ 实现：使用 C++17 标准

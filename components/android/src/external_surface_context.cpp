@@ -15,12 +15,12 @@
  * limitations under the License.
  */
 
-#include "android/context.hpp"
+#include "android/external_surface_context.hpp"
 
 #include <core/util/logging.hpp>
 #include <jni.h>
 
-#ifndef EXTERNAL_SURFACE
+#ifdef EXTERNAL_SURFACE
 extern "C"
 {
 	// TODO: Arguments can be parsed from the bundle
@@ -40,55 +40,39 @@ extern "C"
 			env->ReleaseStringUTFChars(arg_string, arg);
 		}
 
-		LOGI("JNI: No EXTERNAL_SURFACE Arguments:");
+		LOGI("JNI: Arguments:");
 		for (const auto &arg : args)
 		{
 			LOGI("  {}", arg);
 		}
 
-		vkb::AndroidPlatformContext::android_arguments = args;
+		vkb::ExternalSurfacePlatformContext::android_arguments = args;
 	}
 }
 #endif
 
 namespace details
 {
-std::string get_external_storage_directory(android_app *app)
-{
-	return app->activity->externalDataPath;
+std::string get_external_storage_directory(AAssetManager* asset_manager) {
+    // 返回外部存储路径，与CMake同步脚本保持一致
+    return "/sdcard/Android/data/com.khronos.vulkan_samples/files";
 }
 
-std::string get_external_cache_directory(android_app *app)
-{
-	JNIEnv *env;
-	app->activity->vm->AttachCurrentThread(&env, NULL);
-
-	jclass    cls         = env->FindClass("android/app/NativeActivity");
-	jmethodID getCacheDir = env->GetMethodID(cls, "getCacheDir", "()Ljava/io/File;");
-	jobject   cache_dir   = env->CallObjectMethod(app->activity->javaGameActivity, getCacheDir);
-
-	jclass    fcls        = env->FindClass("java/io/File");
-	jmethodID getPath     = env->GetMethodID(fcls, "getPath", "()Ljava/lang/String;");
-	jstring   path_string = (jstring) env->CallObjectMethod(cache_dir, getPath);
-
-	const char *path_chars = env->GetStringUTFChars(path_string, NULL);
-	std::string temp_folder(path_chars);
-
-	env->ReleaseStringUTFChars(path_string, path_chars);
-	app->activity->vm->DetachCurrentThread();
-	return temp_folder;
+std::string get_external_cache_directory(AAssetManager* asset_manager) {
+    // 简化实现：直接返回内部缓存路径
+    return "/sdcard/Android/data/com.khronos.vulkan_samples/cache";
 }
 }        // namespace details
 
 namespace vkb
 {
-std::vector<std::string> AndroidPlatformContext::android_arguments = {};
+std::vector<std::string> ExternalSurfacePlatformContext::android_arguments = {};
 
-AndroidPlatformContext::AndroidPlatformContext(android_app *app) :
-    PlatformContext{}, app{app}
+ExternalSurfacePlatformContext::ExternalSurfacePlatformContext(AAssetManager *asset_manager) :
+    PlatformContext{}, asset_manager{asset_manager}
 {
-	_external_storage_directory = details::get_external_storage_directory(app);
-	_temp_directory             = details::get_external_cache_directory(app);
+	_external_storage_directory = details::get_external_storage_directory(asset_manager);
+	_temp_directory             = details::get_external_cache_directory(asset_manager);
 	_arguments                  = android_arguments;
 }
 }        // namespace vkb

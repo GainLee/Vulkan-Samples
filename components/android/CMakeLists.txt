@@ -18,9 +18,11 @@ vkb__register_component(
     NAME android_platform
     HEADERS
         include/android/context.hpp
+        include/android/external_surface_context.hpp
     SRC
         src/context.cpp
         src/entrypoint.cpp
+        src/external_surface_context.cpp
     LINK_LIBS
         vkb__core
 )

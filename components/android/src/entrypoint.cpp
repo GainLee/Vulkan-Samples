@@ -18,8 +18,16 @@
 #include <core/platform/entrypoint.hpp>
 
 #include "android/context.hpp"
+#include "android/external_surface_context.hpp"
 
 std::unique_ptr<vkb::PlatformContext> create_platform_context(android_app *app)
 {
 	return std::make_unique<vkb::AndroidPlatformContext>(app);
 }
+
+#ifdef EXTERNAL_SURFACE
+std::unique_ptr<vkb::PlatformContext> create_platform_context(AAssetManager *asset_manager)
+{
+	return std::make_unique<vkb::ExternalSurfacePlatformContext>(asset_manager);
+}
+#endif

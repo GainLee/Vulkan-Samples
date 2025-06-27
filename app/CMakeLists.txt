@@ -42,6 +42,9 @@ if(ANDROID)
         list(APPEND SRC ${CMAKE_CURRENT_SOURCE_DIR}/android/AndroidManifest.xml)
     endif()
 
+    # Add Android JNI files directly
+    list(APPEND SRC android/android_jni.cpp)
+
     add_library(${PROJECT_NAME} SHARED ${SRC})
 elseif(IOS)
 	list(REMOVE_AT SRC 0)
@@ -58,6 +61,17 @@ else()
 endif()
 
 target_link_libraries(${PROJECT_NAME} PRIVATE vkb__core vkb__filesystem apps plugins)
+
+# Add Android-specific include directories
+if(ANDROID)
+    target_include_directories(${PROJECT_NAME} PRIVATE
+        ${CMAKE_SOURCE_DIR}/framework
+        ${CMAKE_SOURCE_DIR}/app/plugins
+        ${CMAKE_SOURCE_DIR}/app/apps
+        ${CMAKE_SOURCE_DIR}/components/core/include
+        ${CMAKE_SOURCE_DIR}/components/filesystem/include
+    )
+endif()
 
 # Create android project
 if(ANDROID)

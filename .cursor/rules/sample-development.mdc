@@ -1,0 +1,66 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# 示例开发指南
+
+## 示例分类
+
+### API 示例 ([samples/api/](mdc:samples/api/))
+- **hello_triangle** - 基础三角形渲染
+- **compute_nbody** - 计算着色器示例
+- **dynamic_uniform_buffers** - 动态统一缓冲区
+
+### 性能示例 ([samples/performance/](mdc:samples/performance/))
+- 专注于性能优化技术
+- GPU 性能分析和优化
+
+### 扩展示例 ([samples/extensions/](mdc:samples/extensions/))
+- Vulkan 扩展功能演示
+- 平台特定功能
+
+## 示例结构模式
+
+每个示例通常包含：
+1. **README.adoc** - 示例说明文档
+2. **CMakeLists.txt** - 构建配置
+3. **sample.cpp/h** - 主要实现文件
+4. **对应着色器** - 在 [shaders/](mdc:shaders/) 目录中
+
+## 创建新示例
+
+### 基本步骤
+1. 继承 `ApiVulkanSample` 或 `VulkanSample`
+2. 实现必要的虚函数：
+   - `build_command_buffers()`
+   - `prepare()`
+   - `update()`
+3. 注册到 [app/apps.cpp.in](mdc:app/apps.cpp.in)
+
+### HPP 版本
+- 部分示例提供 C++ Vulkan HPP 版本
+- 前缀 `hpp_` 标识
+- 使用现代 C++ 风格的 Vulkan 绑定
+
+## 着色器管理
+
+### 着色器编译
+- GLSL 源文件位于 [shaders/](mdc:shaders/)
+- 构建时自动编译为 SPIR-V
+- 支持多种着色器阶段
+
+### 着色器加载
+- 框架提供统一的着色器加载接口
+- 支持运行时编译和预编译
+
+## 资源管理
+
+### 纹理资源
+- [assets/textures/](mdc:assets/textures/) - 纹理文件
+- 支持 KTX 格式纹理
+- 自动 mipmap 生成
+
+### 模型资源
+- [assets/](mdc:assets/) - 3D 模型文件
+- 支持 glTF 格式加载

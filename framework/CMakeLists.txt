@@ -337,10 +337,14 @@ set(ANDROID_FILES
     # Header Files
     platform/android/android_platform.h
     platform/android/android_window.h
+    platform/android/external_surface_android_platform.h
+    platform/android/external_surface_android_window.h
     stats/hwcpipe_stats_provider.h
     # Source Files
     platform/android/android_platform.cpp
     platform/android/android_window.cpp
+    platform/android/external_surface_android_platform.cpp
+    platform/android/external_surface_android_window.cpp
     stats/hwcpipe_stats_provider.cpp)
 
 set(IOS_FILES
