@@ -33,6 +33,10 @@ class ExternalSurfaceAndroidPlatform : public Platform
 
 	virtual void terminate(ExitCode code) override;
 
+	/**
+	 * @brief Maybe we should rename this method to render_frame, because we don't want to loop render in this method
+	 * @return An exit code representing the outcome of the loop
+	 */
 	virtual ExitCode main_loop() override;
 
 	/**

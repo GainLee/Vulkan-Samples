@@ -3,9 +3,13 @@ package com.khronos.vulkan_samples;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.res.AssetManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.Surface;
@@ -19,6 +23,9 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -50,12 +57,21 @@ public class SurfaceSampleActivity extends Activity implements SurfaceHolder.Cal
     private HandlerThread renderThread;
     private Handler renderHandler;
     private volatile boolean isRunning = false;
+    private volatile boolean isInitialized = false;
+    private volatile boolean imageSelected = false;
+    
+    // Image selection
+    private static final int PICK_IMAGE_REQUEST = 1;
+    private int imageWidth = 0;
+    private int imageHeight = 0;
+    private boolean isImageSample = false;
     
     // UI elements
     private LinearLayout overlayLayout;
     private LinearLayout bottomInfo;
     private Button toggleOverlayBtn;
     private Button backBtn;
+    private Button selectImageBtn;
     private TextView sampleNameText;
     private boolean uiVisible = true;
     
@@ -63,6 +79,10 @@ public class SurfaceSampleActivity extends Activity implements SurfaceHolder.Cal
     public static native void nativeSetSurface(Surface surface);
     public static native void nativeReleaseSurface();
     public static native void nativeRunSample(AssetManager assetManager, String[] args);
+    public static native boolean nativeInitSample(AssetManager assetManager, String[] args);
+    public static native boolean nativeRenderFrame();
+    public static native void nativeTerminateSample();
+    public static native void nativeSetImageData(Bitmap bitmap);
     
     static {
         System.loadLibrary("vulkan_samples");
@@ -90,6 +110,10 @@ public class SurfaceSampleActivity extends Activity implements SurfaceHolder.Cal
                 sampleArgs = new String[]{"vulkan_samples"};
             }
         }
+        
+        // Check if this is camera_preview sample
+        isImageSample = sampleArgs != null && sampleArgs.length >= 2 && 
+                       "camera_preview".equals(sampleArgs[1]);
         
         // Set up full screen mode but keep title bar for our custom UI
         requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -122,6 +146,19 @@ public class SurfaceSampleActivity extends Activity implements SurfaceHolder.Cal
         
         // Update sample name
         updateSampleInfo();
+        
+        // For camera_preview sample, prompt user to select image after UI is ready
+        if (isImageSample) {
+            surfaceView.post(new Runnable() {
+                @Override
+                public void run() {
+                    showStatus("Please select an image to begin");
+                    Toast.makeText(SurfaceSampleActivity.this, 
+                                 "Please select an image to start the camera preview sample", 
+                                 Toast.LENGTH_LONG).show();
+                }
+            });
+        }
     }
     
     private void initializeUI() {
@@ -130,6 +167,21 @@ public class SurfaceSampleActivity extends Activity implements SurfaceHolder.Cal
         toggleOverlayBtn = findViewById(R.id.toggle_overlay_btn);
         backBtn = findViewById(R.id.back_btn);
         sampleNameText = findViewById(R.id.sample_name_text);
+        
+        // Add select image button for camera_preview sample
+        selectImageBtn = new Button(this);
+        selectImageBtn.setText("Select Image");
+        selectImageBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                selectImageFromGallery();
+            }
+        });
+        
+        // Only show select image button for camera_preview sample
+        if (isImageSample) {
+            bottomInfo.addView(selectImageBtn);
+        }
         
         // Set button click listeners
         toggleOverlayBtn.setOnClickListener(new View.OnClickListener() {
@@ -145,9 +197,84 @@ public class SurfaceSampleActivity extends Activity implements SurfaceHolder.Cal
                 onBackPressed();
             }
         });
+    }
+    
+    private void selectImageFromGallery() {
+        Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+        intent.setType("image/*");
+        startActivityForResult(intent, PICK_IMAGE_REQUEST);
+    }
+    
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
         
-        // Auto-hide UI after 5 seconds (only if surface is ready)
-        // We'll trigger this from startRenderThread instead
+        if (requestCode == PICK_IMAGE_REQUEST && resultCode == RESULT_OK && data != null) {
+            Uri imageUri = data.getData();
+            if (imageUri != null) {
+                loadImageFromUri(imageUri);
+                renderFrame();
+            }
+        }
+    }
+    
+    private void loadImageFromUri(Uri uri) {
+        try {
+            InputStream inputStream = getContentResolver().openInputStream(uri);
+            if (inputStream != null) {
+                loadImageFromInputStream(inputStream, "Selected image");
+            }
+        } catch (IOException e) {
+            Log.e("SurfaceSampleActivity", "Failed to load image from URI", e);
+            Toast.makeText(this, "Failed to load image", Toast.LENGTH_SHORT).show();
+        }
+    }
+    
+    private void loadImageFromInputStream(InputStream inputStream, String description) {
+        try {
+            // Try to load as a bitmap
+            Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
+            if (bitmap != null) {
+                convertBitmapToImageData(bitmap, description);
+                bitmap.recycle();
+            } else {
+                Log.w("SurfaceSampleActivity", "Could not decode image as bitmap: " + description);
+            }
+        } catch (Exception e) {
+            Log.e("SurfaceSampleActivity", "Failed to load image from stream", e);
+        } finally {
+            try {
+                inputStream.close();
+            } catch (IOException e) {
+                // Ignore
+            }
+        }
+    }
+    
+    private void convertBitmapToImageData(Bitmap bitmap, String description) {
+        // Convert bitmap to RGBA8888 format for consistency
+        Bitmap rgbaBitmap = bitmap.copy(Bitmap.Config.ARGB_8888, false);
+        
+        imageWidth = rgbaBitmap.getWidth();
+        imageHeight = rgbaBitmap.getHeight();
+        
+        Log.i("SurfaceSampleActivity", "Passing bitmap to native: " + description + 
+              " (" + imageWidth + "x" + imageHeight + ")");
+        
+        // Send bitmap directly to native if render thread is running
+        if (isRunning) {
+            nativeSetImageData(rgbaBitmap);
+        }
+        
+        showStatus("Loaded: " + description + " (" + imageWidth + "x" + imageHeight + ")");
+        
+        rgbaBitmap.recycle();
+        
+        // Mark image as selected and initialize engine if needed
+        imageSelected = true;
+        if (isImageSample && !isInitialized && isRunning) {
+            initializeEngine();
+        }
     }
     
     private void updateSampleInfo() {
@@ -231,37 +358,20 @@ public class SurfaceSampleActivity extends Activity implements SurfaceHolder.Cal
             }
         }
         
-        showStatus("Surface ready, starting sample...");
-        
         isRunning = true;
         renderThread = new HandlerThread("RenderThread");
         renderThread.start();
         renderHandler = new Handler(renderThread.getLooper());
         
-        renderHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    showStatus("Running sample...");
-                    // Run the native sample
-                    nativeRunSample(SurfaceSampleActivity.this.getAssets(), sampleArgs);
-                } catch (Exception e) {
-                    showStatus("Error: " + e.getMessage());
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            Toast.makeText(SurfaceSampleActivity.this, 
-                                         "Sample execution failed: " + e.getMessage(), 
-                                         Toast.LENGTH_LONG).show();
-                            finish();
-                        }
-                    });
-                } finally {
-                    isRunning = false;
-                    showStatus("Sample finished");
-                }
-            }
-        });
+        if (isImageSample) {
+            // For camera_preview sample, wait for image selection
+            showStatus("Please select an image to begin");
+            // Don't initialize engine yet, wait for image selection
+        } else {
+            // For other samples, initialize immediately
+            showStatus("Surface ready, starting sample...");
+            initializeEngine();
+        }
         
         // Auto-hide UI after 5 seconds once sample is running
         surfaceView.postDelayed(new Runnable() {
@@ -274,12 +384,44 @@ public class SurfaceSampleActivity extends Activity implements SurfaceHolder.Cal
         }, 5000);
     }
     
+    private void renderFrame() {
+        renderHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                if (isRunning && isInitialized) {
+                    try {
+                        // Render one frame
+                        boolean renderSuccess = nativeRenderFrame();
+                        if (!renderSuccess) {
+                            LOGW("Frame render failed, stopping render loop");
+                            isRunning = false;
+                            showStatus("Render failed");
+                            return;
+                        }
+                    } catch (Exception e) {
+                        LOGW("Exception in render loop: " + e.getMessage());
+                        isRunning = false;
+                        showStatus("Render error: " + e.getMessage());
+                    }
+                }
+            }
+        });
+    }
+    
     private void stopRenderThread() {
         LOGI("Stopping render thread synchronously...");
         isRunning = false;
         
         synchronized (this) {
             if (renderThread != null && renderThread.isAlive()) {
+                // Terminate the native sample first
+                try {
+                    nativeTerminateSample();
+                    showStatus("Sample terminated");
+                } catch (Exception e) {
+                    LOGW("Error terminating sample: " + e.getMessage());
+                }
+                
                 renderThread.quit();
                 renderThread = null;
                 renderHandler = null;
@@ -316,5 +458,56 @@ public class SurfaceSampleActivity extends Activity implements SurfaceHolder.Cal
     
     private void LOGW(String message) {
         Log.w(TAG, message);
+    }
+    
+    private void initializeEngine() {
+        if (isInitialized) {
+            return; // Already initialized
+        }
+        
+        renderHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    showStatus("Initializing sample...");
+                    
+                    // Initialize the native sample
+                    boolean initSuccess = nativeInitSample(SurfaceSampleActivity.this.getAssets(), sampleArgs);
+                    if (!initSuccess) {
+                        showStatus("Sample initialization failed");
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(SurfaceSampleActivity.this, 
+                                             "Sample initialization failed", 
+                                             Toast.LENGTH_LONG).show();
+                                finish();
+                            }
+                        });
+                        return;
+                    }
+                    
+                    isInitialized = true;
+                    showStatus("Sample initialized, starting render loop...");
+                    
+                    // Start render loop
+                    renderFrame();
+                    
+                } catch (Exception e) {
+                    showStatus("Error: " + e.getMessage());
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(SurfaceSampleActivity.this, 
+                                         "Sample execution failed: " + e.getMessage(), 
+                                         Toast.LENGTH_LONG).show();
+                            finish();
+                        }
+                    });
+                } finally {
+                    // Cleanup will be handled by stopRenderThread
+                }
+            }
+        });
     }
 } 

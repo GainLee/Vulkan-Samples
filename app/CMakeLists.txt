@@ -62,6 +62,11 @@ endif()
 
 target_link_libraries(${PROJECT_NAME} PRIVATE vkb__core vkb__filesystem apps plugins)
 
+# Add Android-specific libraries
+if(ANDROID)
+    target_link_libraries(${PROJECT_NAME} PRIVATE jnigraphics)
+endif()
+
 # Add Android-specific include directories
 if(ANDROID)
     target_include_directories(${PROJECT_NAME} PRIVATE
