@@ -1,4 +1,3 @@
-#version 320 es
 /* Copyright (c) 2019, Arm Limited and Contributors
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -16,27 +15,20 @@
  * limitations under the License.
  */
 
-precision mediump float;
+#pragma once
 
-layout(location = 0) out vec3 out_color;
+#include "rendering/render_pipeline.h"
+#include "scene_graph/components/camera.h"
+#include "vulkan_sample.h"
 
-vec2 triangle_positions[3] = vec2[](
-
-    vec2(0.5, -0.5),
-    vec2(-0.5, 0.5),
-    vec2(0.5, 0.5)
-    
-);
-
-vec3 triangle_colors[3] = vec3[](
-    vec3(1.0, 0.0, 0.0),
-    vec3(0.0, 1.0, 0.0),
-    vec3(0.0, 0.0, 1.0)
-);
-
-void main()
+class SampleTest : public vkb::VulkanSample
 {
-    gl_Position = vec4(triangle_positions[gl_VertexIndex], 0.0, 1.0);
+  public:
+	SampleTest();
 
-    out_color = triangle_colors[gl_VertexIndex];
-}
+	virtual bool prepare(vkb::Platform &platform) override;
+
+	virtual ~SampleTest() = default;
+};
+
+std::unique_ptr<vkb::VulkanSample> create_sample_test();

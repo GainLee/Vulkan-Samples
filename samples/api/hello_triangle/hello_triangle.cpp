@@ -694,6 +694,12 @@ VkShaderModule HelloTriangle::load_shader_module(Context &context, const char *p
 
 	auto buffer = vkb::fs::read_shader_binary(path);
 
+	if (buffer.empty())
+	{
+		LOGE("Failed to read shader file: {}. Make sure it exists at /storage/emulated/0/com.khronos.vulkan_samples/shaders/", path);
+		return VK_NULL_HANDLE;
+	}
+
 	std::string file_ext = path;
 
 	// Extract extension name from the glsl shader file
@@ -738,7 +744,7 @@ void HelloTriangle::init_pipeline(Context &context)
 
 	// Specify rasterization state.
 	VkPipelineRasterizationStateCreateInfo raster{VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO};
-	raster.cullMode  = VK_CULL_MODE_BACK_BIT;
+	raster.cullMode  = VK_CULL_MODE_NONE;  // Disable culling to ensure triangle is visible
 	raster.frontFace = VK_FRONT_FACE_CLOCKWISE;
 	raster.lineWidth = 1.0f;
 
@@ -778,11 +784,21 @@ void HelloTriangle::init_pipeline(Context &context)
 	shader_stages[0].module = load_shader_module(context, "triangle.vert");
 	shader_stages[0].pName  = "main";
 
+	if (shader_stages[0].module == VK_NULL_HANDLE)
+	{
+		LOGE("Failed to load vertex shader module");
+	}
+
 	// Fragment stage of the pipeline
 	shader_stages[1].sType  = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
 	shader_stages[1].stage  = VK_SHADER_STAGE_FRAGMENT_BIT;
 	shader_stages[1].module = load_shader_module(context, "triangle.frag");
 	shader_stages[1].pName  = "main";
+
+	if (shader_stages[1].module == VK_NULL_HANDLE)
+	{
+		LOGE("Failed to load fragment shader module");
+	}
 
 	VkGraphicsPipelineCreateInfo pipe{VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO};
 	pipe.stageCount          = vkb::to_u32(shader_stages.size());
@@ -888,7 +904,7 @@ void HelloTriangle::render_triangle(Context &context, uint32_t swapchain_index)
 
 	// Set clear color values.
 	VkClearValue clear_value;
-	clear_value.color = {{0.01f, 0.01f, 0.033f, 1.0f}};
+	clear_value.color = {{0.01f, 0.01f, 0.033f, 1.0f}};  // Original dark blue background
 
 	// Begin the render pass.
 	VkRenderPassBeginInfo rp_begin{VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO};
@@ -1101,6 +1117,9 @@ bool HelloTriangle::prepare(vkb::Platform &platform)
 	context.swapchain_dimensions.width  = extent.width;
 	context.swapchain_dimensions.height = extent.height;
 
+	LOGI("Window extent: {}x{}", extent.width, extent.height);
+	LOGI("Swapchain dimensions: {}x{}", context.swapchain_dimensions.width, context.swapchain_dimensions.height);
+
 	if (!context.surface)
 	{
 		throw std::runtime_error("Failed to create window surface.");
@@ -1114,6 +1133,8 @@ bool HelloTriangle::prepare(vkb::Platform &platform)
 	init_render_pass(context);
 	init_pipeline(context);
 	init_framebuffers(context);
+
+    LOGI("prepare done");
 
 	return true;
 }

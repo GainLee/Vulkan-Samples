@@ -358,9 +358,11 @@ set(ANDROID_FILES
     # Header Files
     platform/android/android_platform.h
     platform/android/android_window.h
+    platform/android/android_surface_platform.h
     # Source Files
     platform/android/android_platform.cpp
-    platform/android/android_window.cpp)
+    platform/android/android_window.cpp
+    platform/android/android_surface_platform.cpp)
 
 set(WINDOWS_FILES
     # Header Files

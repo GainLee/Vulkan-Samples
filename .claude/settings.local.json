@@ -1,0 +1,40 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir -p build_android)",
+      "Bash(cmake .. -DANDROID=ON)",
+      "Bash(./bldsys/scripts/generate_android_gradle.sh 2>&1)",
+      "Bash(bash bldsys/scripts/generate_android_gradle.sh 2>&1)",
+      "Bash(bash bldsys/scripts/generate_android_gradle.sh)",
+      "Bash(cmake:*)",
+      "Bash(./gradlew assembleDebug)",
+      "Bash(./gradlew :app:buildCMakeDebug[arm64-v8a])",
+      "Bash(./gradlew clean:*)",
+      "Bash(./gradlew compileDebugJavaWithJavac)",
+      "Bash(./gradlew assembleRelease)",
+      "Bash(javac:*)",
+      "Bash(export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk-17.jdk/Contents/Home)",
+      "Bash(adb logcat:*)",
+      "Bash(find '/Volumes/Mac Ds/Users/mac/code/github/vk/Vulkan-Samples/app/android/res' -name *.xml -type f)",
+      "Bash(adb install:*)",
+      "Bash(nm -D '/Volumes/Mac Ds/Users/mac/code/github/vk/Vulkan-Samples/build/android_gradle/app/build/intermediates/merged_native_libs/debug/out/lib/arm64-v8a/libvulkan_samples.so')",
+      "Bash(nm '/Volumes/Mac Ds/Users/mac/code/github/vk/Vulkan-Samples/build/android_gradle/app/build-native/Debug/6i3yr2g1/arm64-v8a/framework/CMakeFiles/framework.dir/platform/android/android_surface_platform.cpp.o')",
+      "Bash(unzip -l '/Volumes/Mac Ds/Users/mac/code/github/vk/Vulkan-Samples/build/android_gradle/app/build/outputs/apk/debug/vulkan_samples-debug.apk')",
+      "Bash(unzip -p '/Volumes/Mac Ds/Users/mac/code/github/vk/Vulkan-Samples/build/android_gradle/app/build/outputs/apk/debug/vulkan_samples-debug.apk' lib/arm64-v8a/libvulkan_samples.so)",
+      "Bash(nm -D /tmp/libvulkan.so)",
+      "Bash(export JAVA_HOME=/Library/Java/JavaVirtualMachisms/jdk-17.jdk/Contents/Home)",
+      "Bash(nm -D '/Volumes/Mac Ds/Users/mac/code/github/vk/Vulkan-Samples/build/android_gradle/app/build/intermediates/stripped_native_libs/debug/out/lib/arm64-v8a/libvulkan_samples.so')",
+      "Bash(find '/Volumes/Mac Ds/Users/mac/code/github/vk/Vulkan-Samples/build/android_gradle/app/build/intermediates' -name libvulkan_samples.so -path *arm64-v8a*)",
+      "Bash(nm -D '/Volumes/Mac Ds/Users/mac/code/github/vk/Vulkan-Samples/build/android_gradle/app/build/intermediates/cxx/Debug/6i3yr2g1/obj/arm64-v8a/libvulkan_samples.so')",
+      "Bash(nm '/Volumes/Mac Ds/Users/mac/code/github/vk/Vulkan-Samples/build/android_gradle/app/build/intermediates/cxx/Debug/6i3yr2g1/obj/arm64-v8a/libvulkan_samples.so')",
+      "Bash(./gradlew :app:assembleDebug)",
+      "Bash(adb shell:*)",
+      "Bash(adb push:*)",
+      "Bash(./gradlew :app:installDebug)",
+      "Bash(./gradlew :app:assembleDebug :app:installDebug)",
+      "Bash(./gradlew --stop)",
+      "Bash(git fetch:*)",
+      "Bash(git add:*)"
+    ]
+  }
+}

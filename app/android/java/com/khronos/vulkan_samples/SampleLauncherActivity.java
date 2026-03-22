@@ -29,6 +29,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Environment;
 import android.provider.Settings;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
@@ -78,6 +79,8 @@ public class SampleLauncherActivity extends AppCompatActivity {
                 // top level (shared) external storage directory
                 String shared_storage = external_files_dir.getPath().split(Pattern.quote("Android"))[0];
                 external_files_dir = new File(shared_storage, getPackageName());
+                Log.i("test", "external_files_dir.toString():"+external_files_dir.toString());
+                Log.i("test", "temp_files_dir.toString():"+temp_files_dir.toString());
                 initFilePath(external_files_dir.toString(), temp_files_dir.toString());
             }
 
@@ -158,6 +161,12 @@ public class SampleLauncherActivity extends AppCompatActivity {
         } else if(item.getItemId() == R.id.menu_headless) {
             isHeadless = !item.isChecked();
             item.setChecked(isHeadless);
+            return true;
+        } else if(item.getItemId() == R.id.menu_test_surface_activity) {
+            // Launch VulkanSurfaceActivity to test surface-based rendering
+            Intent intent = new Intent(SampleLauncherActivity.this, VulkanSurfaceActivity.class);
+            intent.putExtra("sample", "hello_triangle");
+            startActivity(intent);
             return true;
         } else {
             return super.onOptionsItemSelected(item);

@@ -18,13 +18,21 @@
 #include "android_window.h"
 
 #include "platform/android/android_platform.h"
+#include "platform/android/android_surface_platform.h"
 
 namespace vkb
 {
 AndroidWindow::AndroidWindow(AndroidPlatform *platform, ANativeWindow *&window, const Window::Properties &properties) :
     Window(properties),
-    handle{window},
-    platform{platform}
+    native_activity_platform{platform},
+    handle{window}
+{
+}
+
+AndroidWindow::AndroidWindow(AndroidSurfacePlatform *platform, ANativeWindow *&window, const Window::Properties &properties) :
+    Window(properties),
+    surface_platform{platform},
+    handle{window}
 {
 }
 
@@ -53,7 +61,11 @@ VkSurfaceKHR AndroidWindow::create_surface(VkInstance instance, VkPhysicalDevice
 
 void AndroidWindow::process_events()
 {
-	process_android_events(platform->get_android_app());
+	if (native_activity_platform)
+	{
+		process_android_events(native_activity_platform->get_android_app());
+	}
+	// For surface_platform, events are handled differently (via Java callbacks)
 }
 
 bool AndroidWindow::should_close()
@@ -63,12 +75,23 @@ bool AndroidWindow::should_close()
 
 void AndroidWindow::close()
 {
-	ANativeActivity_finish(platform->get_activity());
+	if (native_activity_platform)
+	{
+		ANativeActivity_finish(native_activity_platform->get_activity());
+	}
+	// For surface_platform, activity finishing is handled in Java
 	finish_called = true;
 }
 
 float AndroidWindow::get_dpi_factor() const
 {
-	return AConfiguration_getDensity(platform->get_android_app()->config) / static_cast<float>(ACONFIGURATION_DENSITY_MEDIUM);
+	if (native_activity_platform)
+	{
+		return AConfiguration_getDensity(native_activity_platform->get_android_app()->config) /
+		       static_cast<float>(ACONFIGURATION_DENSITY_MEDIUM);
+	}
+	// For surface_platform, return a default DPI factor
+	// Can be improved by getting density from Java
+	return 2.0f;
 }
 }        // namespace vkb

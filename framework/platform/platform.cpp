@@ -409,6 +409,11 @@ void Platform::input_event(const InputEvent &input_event)
 void Platform::resize(uint32_t width, uint32_t height)
 {
 	auto extent = Window::Extent{std::max<uint32_t>(width, MIN_WINDOW_WIDTH), std::max<uint32_t>(height, MIN_WINDOW_HEIGHT)};
+
+	// Always update window_properties so new windows are created with correct extent
+	window_properties.extent.width = extent.width;
+	window_properties.extent.height = extent.height;
+
 	if ((window) && (width > 0) && (height > 0))
 	{
 		auto actual_extent = window->resize(extent);

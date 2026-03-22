@@ -47,10 +47,15 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 
 target_link_libraries(${PROJECT_NAME} PRIVATE framework plugins apps spdlog)
 
+# Force include all JNI symbols from framework
+if(ANDROID)
+    target_link_options(${PROJECT_NAME} PRIVATE -Wl,--whole-archive $<TARGET_FILE:framework> -Wl,--no-whole-archive)
+endif()
+
 # Create android project
 if(ANDROID)
-    set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "-u ANativeActivity_onCreate")
-    
+    set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "-u ANativeActivity_onCreate -Wl,--export-dynamic")
+
     if(CMAKE_VS_NsightTegra_VERSION)
         set_property(TARGET ${PROJECT_NAME} PROPERTY ANDROID_GUI ON)
         set_property(TARGET ${PROJECT_NAME} PROPERTY ANDROID_ASSETS_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR}/../assets)
