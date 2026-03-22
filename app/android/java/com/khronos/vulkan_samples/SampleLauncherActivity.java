@@ -165,7 +165,7 @@ public class SampleLauncherActivity extends AppCompatActivity {
         } else if(item.getItemId() == R.id.menu_test_surface_activity) {
             // Launch VulkanSurfaceActivity to test surface-based rendering
             Intent intent = new Intent(SampleLauncherActivity.this, VulkanSurfaceActivity.class);
-            intent.putExtra("sample", "hello_triangle");
+            intent.putExtra("sample", "hdr");
             startActivity(intent);
             return true;
         } else {

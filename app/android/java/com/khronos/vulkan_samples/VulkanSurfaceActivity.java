@@ -27,6 +27,8 @@ import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
+import android.view.MotionEvent;
+import android.view.KeyEvent;
 import android.widget.FrameLayout;
 import android.widget.Toast;
 
@@ -72,6 +74,10 @@ public class VulkanSurfaceActivity extends AppCompatActivity implements SurfaceH
     private native void nativeCleanup();
     private native Sample[] getSamples();
 
+    // Input event native methods
+    private native void nativeOnTouchEvent(int pointerId, int pointerCount, int action, float x, float y);
+    private native void nativeOnKeyEvent(int keyCode, int action);
+
     private String[] pendingArgs = null;
 
     @Override
@@ -87,6 +93,13 @@ public class VulkanSurfaceActivity extends AppCompatActivity implements SurfaceH
 
         // Initialize file paths
         initFilePaths();
+
+        // Parse intent extras for sample name
+        String sampleName = getIntent().getStringExtra("sample");
+        if (sampleName != null && !sampleName.isEmpty()) {
+            Log.i(TAG, "Sample from intent: " + sampleName);
+            pendingArgs = new String[]{"sample", sampleName};
+        }
 
         // Create UI
         containerLayout = new FrameLayout(this);
@@ -274,5 +287,38 @@ public class VulkanSurfaceActivity extends AppCompatActivity implements SurfaceH
                         View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN |
                         View.SYSTEM_UI_FLAG_HIDE_NAVIGATION |
                         View.SYSTEM_UI_FLAG_FULLSCREEN);
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        // Pass touch events to native layer
+        if (nativeInitialized) {
+            int action = event.getActionMasked();
+            int pointerCount = event.getPointerCount();
+
+            for (int i = 0; i < pointerCount; i++) {
+                int pointerId = event.getPointerId(i);
+                float x = event.getX(i);
+                float y = event.getY(i);
+                nativeOnTouchEvent(pointerId, pointerCount, action, x, y);
+            }
+        }
+        return super.onTouchEvent(event);
+    }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (nativeInitialized) {
+            nativeOnKeyEvent(keyCode, KeyEvent.ACTION_DOWN);
+        }
+        return super.onKeyDown(keyCode, event);
+    }
+
+    @Override
+    public boolean onKeyUp(int keyCode, KeyEvent event) {
+        if (nativeInitialized) {
+            nativeOnKeyEvent(keyCode, KeyEvent.ACTION_UP);
+        }
+        return super.onKeyUp(keyCode, event);
     }
 }

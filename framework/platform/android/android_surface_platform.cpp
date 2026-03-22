@@ -21,10 +21,12 @@
 #include <spdlog/sinks/android_sink.h>
 #include <spdlog/sinks/basic_file_sink.h>
 #include <android/configuration.h>
+#include <android/input.h>
 
 #include "apps.h"
 #include "common/logging.h"
 #include "platform/android/android_window.h"
+#include "platform/input_events.h"
 
 // Forward declaration of global plugins namespace
 namespace plugins {
@@ -175,6 +177,171 @@ extern "C"
 		}
 
 		return j_sample_list;
+	}
+
+	// Touch event translation helper
+	inline TouchAction translate_touch_action(int action)
+	{
+		action &= AMOTION_EVENT_ACTION_MASK;
+		if (action == AMOTION_EVENT_ACTION_DOWN || action == AMOTION_EVENT_ACTION_POINTER_DOWN)
+		{
+			return TouchAction::Down;
+		}
+		else if (action == AMOTION_EVENT_ACTION_UP || action == AMOTION_EVENT_ACTION_POINTER_UP)
+		{
+			return TouchAction::Up;
+		}
+		else if (action == AMOTION_EVENT_ACTION_CANCEL)
+		{
+			return TouchAction::Cancel;
+		}
+		else if (action == AMOTION_EVENT_ACTION_MOVE)
+		{
+			return TouchAction::Move;
+		}
+		return TouchAction::Unknown;
+	}
+
+	// Key code translation helper
+	inline KeyCode translate_key_code(int key)
+	{
+		switch (key)
+		{
+			case AKEYCODE_BACK:
+				return KeyCode::Back;
+			case AKEYCODE_ESCAPE:
+				return KeyCode::Escape;
+			case AKEYCODE_ENTER:
+				return KeyCode::Enter;
+			case AKEYCODE_SPACE:
+				return KeyCode::Space;
+			case AKEYCODE_DEL:
+				return KeyCode::DelKey;
+			case AKEYCODE_FORWARD_DEL:
+				return KeyCode::Backspace;
+			case AKEYCODE_DPAD_UP:
+				return KeyCode::Up;
+			case AKEYCODE_DPAD_DOWN:
+				return KeyCode::Down;
+			case AKEYCODE_DPAD_LEFT:
+				return KeyCode::Left;
+			case AKEYCODE_DPAD_RIGHT:
+				return KeyCode::Right;
+			case AKEYCODE_0:
+				return KeyCode::_0;
+			case AKEYCODE_1:
+				return KeyCode::_1;
+			case AKEYCODE_2:
+				return KeyCode::_2;
+			case AKEYCODE_3:
+				return KeyCode::_3;
+			case AKEYCODE_4:
+				return KeyCode::_4;
+			case AKEYCODE_5:
+				return KeyCode::_5;
+			case AKEYCODE_6:
+				return KeyCode::_6;
+			case AKEYCODE_7:
+				return KeyCode::_7;
+			case AKEYCODE_8:
+				return KeyCode::_8;
+			case AKEYCODE_9:
+				return KeyCode::_9;
+			case AKEYCODE_A:
+				return KeyCode::A;
+			case AKEYCODE_B:
+				return KeyCode::B;
+			case AKEYCODE_C:
+				return KeyCode::C;
+			case AKEYCODE_D:
+				return KeyCode::D;
+			case AKEYCODE_E:
+				return KeyCode::E;
+			case AKEYCODE_F:
+				return KeyCode::F;
+			case AKEYCODE_G:
+				return KeyCode::G;
+			case AKEYCODE_H:
+				return KeyCode::H;
+			case AKEYCODE_I:
+				return KeyCode::I;
+			case AKEYCODE_J:
+				return KeyCode::J;
+			case AKEYCODE_K:
+				return KeyCode::K;
+			case AKEYCODE_L:
+				return KeyCode::L;
+			case AKEYCODE_M:
+				return KeyCode::M;
+			case AKEYCODE_N:
+				return KeyCode::N;
+			case AKEYCODE_O:
+				return KeyCode::O;
+			case AKEYCODE_P:
+				return KeyCode::P;
+			case AKEYCODE_Q:
+				return KeyCode::Q;
+			case AKEYCODE_R:
+				return KeyCode::R;
+			case AKEYCODE_S:
+				return KeyCode::S;
+			case AKEYCODE_T:
+				return KeyCode::T;
+			case AKEYCODE_U:
+				return KeyCode::U;
+			case AKEYCODE_V:
+				return KeyCode::V;
+			case AKEYCODE_W:
+				return KeyCode::W;
+			case AKEYCODE_X:
+				return KeyCode::X;
+			case AKEYCODE_Y:
+				return KeyCode::Y;
+			case AKEYCODE_Z:
+				return KeyCode::Z;
+			default:
+				return KeyCode::Unknown;
+		}
+	}
+
+	inline KeyAction translate_key_action(int action)
+	{
+		if (action == AKEY_EVENT_ACTION_DOWN)
+		{
+			return KeyAction::Down;
+		}
+		else if (action == AKEY_EVENT_ACTION_UP)
+		{
+			return KeyAction::Up;
+		}
+		return KeyAction::Unknown;
+	}
+
+	JNIEXPORT void JNICALL
+	Java_com_khronos_vulkan_1samples_VulkanSurfaceActivity_nativeOnTouchEvent(JNIEnv *env, jobject thiz,
+	                                                                          jint pointer_id, jint pointer_count,
+	                                                                          jint action, jfloat x, jfloat y)
+	{
+		if (g_surface_platform)
+		{
+			g_surface_platform->input_event(TouchInputEvent{
+			    pointer_id,
+			    static_cast<size_t>(pointer_count),
+			    translate_touch_action(action),
+			    x, y});
+		}
+	}
+
+	JNIEXPORT void JNICALL
+	Java_com_khronos_vulkan_1samples_VulkanSurfaceActivity_nativeOnKeyEvent(JNIEnv *env, jobject thiz,
+	                                                                        jint key_code, jint action)
+	{
+		if (g_surface_platform)
+		{
+			g_surface_platform->input_event(KeyInputEvent{
+			    translate_key_code(key_code),
+			    translate_key_action(action)});
+		}
 	}
 }
 

@@ -34,7 +34,9 @@
       "Bash(./gradlew :app:assembleDebug :app:installDebug)",
       "Bash(./gradlew --stop)",
       "Bash(git fetch:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)"
     ]
   }
 }
